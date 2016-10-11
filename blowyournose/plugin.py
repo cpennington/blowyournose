@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+import copy
 import inspect
 
 from nose.plugins import Plugin
@@ -17,6 +18,27 @@ class BlowYourNose(Plugin):
     def beforeTest(self, test):
         # Record the pre-existing attributes.
         test.byn_attrs = set(getattr(test.test, '__dict__', {}))
+
+        # Is there a mock.patch on the test method?
+        method = getattr(test.test, test.test._testMethodName)
+        self.isolate_patchings(method)
+
+    def isolate_patchings(self, method):
+        while method is not None:
+            if hasattr(method, "patchings"):
+                if not hasattr(method, "byn_patchings"):
+                    if hasattr(method, "im_func"):
+                        method.im_func.byn_patchings = method.im_func.patchings
+                    else:
+                        method.byn_patchings = method.patchings
+
+                if hasattr(method, "im_func"):
+                    method.im_func.patchings = copy.deepcopy(method.im_func.byn_patchings)
+                else:
+                    method.patchings = copy.deepcopy(method.byn_patchings)
+
+            # Is this a decorated method?
+            method = getattr(method, "__wrapped__", None)
 
     def afterTest(self, test):
         obj = test.test
