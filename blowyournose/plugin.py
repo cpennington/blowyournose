@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import copy
 import inspect
+import mock
 
 from nose.plugins import Plugin
 
@@ -33,9 +34,19 @@ class BlowYourNose(Plugin):
                         method.byn_patchings = method.patchings
 
                 if hasattr(method, "im_func"):
-                    method.im_func.patchings = copy.deepcopy(method.im_func.byn_patchings)
+                    method.im_func.patchings = copy.deepcopy(
+                        method.im_func.byn_patchings,
+                        memo={
+                            id(mock.DEFAULT): mock.DEFAULT,
+                        }
+                    )
                 else:
-                    method.patchings = copy.deepcopy(method.byn_patchings)
+                    method.patchings = copy.deepcopy(
+                        method.byn_patchings,
+                        memo={
+                            id(mock.DEFAULT): mock.DEFAULT,
+                        }
+                    )
 
             # Is this a decorated method?
             method = getattr(method, "__wrapped__", None)

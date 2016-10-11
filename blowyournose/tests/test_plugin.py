@@ -36,6 +36,15 @@ class MockedTestCaseMethod(unittest.TestCase):
         os.getgid(Booger("test_with_many_mocks"))
         self.assertEqual(os.chdir, "Hey there")
 
+    @mock.patch('os.listdir')
+    def test_with_implicit_mock(self, mock_listdir):
+        os.listdir(Booger("test_with_implicit_mock"))
+
+    @mock.patch('os.listdir', side_effect=Exception)
+    def test_with_implicit_mock_kwargs(self, mock_listdir):
+        with self.assertRaises(Exception):
+            os.listdir(Booger("test_with_implicit_mock_kwargs"))
+
 
 class MockedTestCaseMethodSubclass(MockedTestCaseMethod):
     pass
